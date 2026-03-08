@@ -1,8 +1,12 @@
 --- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/RoadGamesBRGO/ModernPlot
+
 build-by-default: true
 branches:
 - main
 projects:
   ModernPlot:
     path: ""
+    libs:
+      - src: RoadGamesBRGO/ModernEconomy/ModernEconomy
+        version: dev
 ...
