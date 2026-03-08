@@ -5,6 +5,8 @@ api: [5.0.0]
 author: rgbrgo
 description: Sistema moderno de terrenos funcional.
 
+depend: [ModernEconomy]
+
 commands:
   plot:
     description: "Abrir menu de terrenos"
@@ -13,4 +15,5 @@ commands:
 permissions:
   modernplot.use:
     description: "Permite usar o comando /plot"
+
     default: true # Isso permite que todos usem, se quiser só ADM, mude para op
