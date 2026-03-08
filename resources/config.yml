@@ -1,0 +1,11 @@
+# Preços do Sistema
+precos:
+  compra: 1000.0
+  amigo: 500.0
+  limpeza: 200000.0
+  desistir: 200000.0
+
+# Configurações de Mensagens
+mensagens:
+  entrou_terreno: "§e§lPLOT:§r §fTerreno de §b{owner}"
+  terreno_livre: "§a§lPLOT:§r §7Terreno sem dono (Disponível)"

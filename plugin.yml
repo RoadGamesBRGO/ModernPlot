@@ -1,0 +1,16 @@
+name: ModernPlot
+main: rgbrgo\ModernPlot\Main
+version: 1.0.0
+api: [5.0.0]
+author: rgbrgo
+description: Sistema moderno de terrenos funcional.
+
+commands:
+  plot:
+    description: "Abrir menu de terrenos"
+    permission: "modernplot.use" # Nome da permissão que o comando pede
+
+permissions:
+  modernplot.use:
+    description: "Permite usar o comando /plot"
+    default: true # Isso permite que todos usem, se quiser só ADM, mude para op
