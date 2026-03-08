@@ -56,4 +56,4 @@ O **ModernPlot** permite que os jogadores comprem, protejam e gerenciem seus pr�
 Este projeto usa a licença **CC BY-NC 4.0**.
 **PROIBIDA A VENDA** deste plugin. Uso exclusivo para servidores gratuitos ou comunitários. Créditos ao autor: **Mayco**.
 
----
+--- 
