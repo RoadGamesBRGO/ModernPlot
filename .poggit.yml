@@ -6,7 +6,5 @@ branches:
 projects:
   ModernPlot:
     path: ""
-    libs:
-      - src: RoadGamesBRGO/ModernEconomy/ModernEconomy
-        version: dev
+    
 ...
