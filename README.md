@@ -10,6 +10,10 @@ O **ModernPlot** permite que os jogadores comprem, protejam e gerenciem seus pr�
 
 ---
 
+## ⚠️ Requisitos
+Para que este plugin funcione, você **PRECISA** ter instalado:
+*   [ModernEconomy]([https://poggit.pmmp.io/ci/RoadGamesBRGO/ModernEconomy/~]) - Sistema de economia base.
+
 ## 🛠️ Comandos de Terrenos
 
 <details>
