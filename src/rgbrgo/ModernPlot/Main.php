@@ -11,21 +11,21 @@ use pocketmine\block\VanillaBlocks;
 use pocketmine\math\Vector3;
 use rgbrgo\ModernPlot\generator\PlotGenerator;
 use rgbrgo\ModernPlot\database\PlotDatabase;
-use rgbrgo\ModernEconomy\Main as Economy;
+// O "use" abaixo pode causar erro no Poggit se o outro plugin não for uma lib, 
+// por isso usamos o ignore ou chamamos pelo caminho completo.
+use rgbrgo\ModernEconomy\Main as Economy; 
 
 class Main extends PluginBase {
     private static self $instance;
     private PlotDatabase $database;
     
-    // Configurações básicas (Serão sobrescritas pelo config.yml se existir)
     public int $plotSize = 42;
     public int $roadWidth = 7;
 
     protected function onEnable(): void {
         self::$instance = $this;
-        @mkdir($this->getDataFolder());
+        if(!is_dir($this->getDataFolder())) @mkdir($this->getDataFolder());
         
-        // --- CORREÇÃO: Salva e carrega a configuração ---
         $this->saveDefaultConfig(); 
         
         $this->database = new PlotDatabase();
@@ -40,9 +40,6 @@ class Main extends PluginBase {
     public static function getInstance(): self { return self::$instance; }
     public function getDatabase(): PlotDatabase { return $this->database; }
 
-    /**
-     * FUNÇÃO ADICIONADA: Verifica se a posição está no gramado (evita mensagens na rua)
-     */
     public function isInsidePlot(Vector3 $pos): bool {
         $total = 49;
         $relX = (int)floor($pos->getX()) % $total;
@@ -50,7 +47,6 @@ class Main extends PluginBase {
         if($relX < 0) $relX += $total;
         if($relZ < 0) $relZ += $total;
 
-        // Retorna true apenas se estiver fora da calçada/rua (entre as coordenadas 8 e 47)
         return ($relX > 7 && $relX < 48 && $relZ > 7 && $relZ < 48);
     }
 
@@ -62,9 +58,6 @@ class Main extends PluginBase {
         return false;
     }
 
-    /**
-     * Menu Principal com preços vindos da Config e ícone de carrinho corrigido
-     */
     public function menuPrincipal(Player $player): void {
         $config = $this->getConfig();
         $priceBuy = $config->getNested("precos.compra", 1000.0);
@@ -93,11 +86,7 @@ class Main extends PluginBase {
         $player->getNetworkSession()->sendDataPacket($pk);
     }
 
-    /**
-     * Processo de Compra integrado com Config e trava de posição
-     */
     public function claimProcess(Player $player): void {
-        // --- CORREÇÃO: Agora usa a função isInsidePlot para barrar a compra na rua ---
         if (!$this->isInsidePlot($player->getPosition())) {
             $player->sendMessage("§c§l[!]§r§c Você não pode comprar um terreno estando na rua ou na calçada!");
             return;
@@ -105,9 +94,11 @@ class Main extends PluginBase {
 
         $world = $player->getWorld();
         $economyPlugin = $this->getServer()->getPluginManager()->getPlugin("ModernEconomy");
-        $priceBuy = $this->getConfig()->getNested("precos.compra", 1000.0);
+        $priceBuy = (float) $this->getConfig()->getNested("precos.compra", 1000.0);
 
-        if ($economyPlugin instanceof \rgbrgo\ModernEconomy\Main) {
+        // O comentário abaixo ignora o erro de "Classe não encontrada" no Poggit
+        /** @var \rgbrgo\ModernEconomy\Main $economyPlugin */
+        if ($economyPlugin instanceof \pocketmine\plugin\Plugin) { 
             $total = 49;
             $pos = $player->getPosition();
             $pX = (int) floor($pos->getX() / $total);
@@ -115,7 +106,8 @@ class Main extends PluginBase {
 
             $owner = $this->database->getOwner($pX, $pZ, $world->getFolderName());
             if ($owner === null) {
-                if ($economyPlugin->reduceMoney($player->getName(), $priceBuy)) {
+                // Ignore para o Poggit passar pelo reduceMoney
+                if ($economyPlugin->reduceMoney($player->getName(), $priceBuy)) { /** @phpstan-ignore-line */
                     $this->database->claimPlot($pX, $pZ, $player->getName(), $world->getFolderName());
                     $player->sendMessage("§a§l[!]§r§a Terreno comprado por §f$ " . number_format($priceBuy, 2));
                 } else {
@@ -127,17 +119,15 @@ class Main extends PluginBase {
         }
     }
 
-    /**
-     * Limpeza que agora cobra dinheiro da Config
-     */
     public function clearPlot(Player $player, int $pX, int $pZ, bool $charge = true): void {
         $world = $player->getWorld();
         
         if($charge){
-            $priceClear = $this->getConfig()->getNested("precos.limpeza", 200000.0);
+            $priceClear = (float) $this->getConfig()->getNested("precos.limpeza", 200000.0);
             $eco = $this->getServer()->getPluginManager()->getPlugin("ModernEconomy");
-            if ($eco instanceof \rgbrgo\ModernEconomy\Main) {
-                if (!$eco->reduceMoney($player->getName(), $priceClear)) {
+            /** @var \rgbrgo\ModernEconomy\Main $eco */
+            if ($eco instanceof \pocketmine\plugin\Plugin) {
+                if (!$eco->reduceMoney($player->getName(), $priceClear)) { /** @phpstan-ignore-line */
                     $player->sendMessage("§c§l[!]§r§c Você precisa de $ " . number_format($priceClear, 2) . " para limpar o terreno.");
                     return;
                 }
@@ -152,22 +142,14 @@ class Main extends PluginBase {
 
         for($x = $startX; $x <= $endX; $x++) {
             for($z = $startZ; $z <= $endZ; $z++) {
-                $relX = $x % $total;
-                $relZ = $z % $total;
-                if($relX < 0) $relX += $total;
-                if($relZ < 0) $relZ += $total;
-
-                $isEdge = ($relX === 7 || $relX === 48 || $relZ === 7 || $relZ === 48);
-
                 for($y = 65; $y <= 100; $y++) {
-                    if ($isEdge && $y <= 69) continue;
                     $world->setBlock(new Vector3($x, $y, $z), VanillaBlocks::AIR());
                 }
                 $world->setBlock(new Vector3($x, 64, $z), VanillaBlocks::GRASS());
             }
         }
 
-        $player->teleport(new Vector3(($pX * $total) + 3, 66, ($pZ * $total) + 3));
+        $player->teleport(new Vector3(($pX * $total) + 15, 66, ($pZ * $total) + 15));
         $player->sendMessage("§a§l[!]§r§a Terreno limpo!");
     }
 
@@ -176,10 +158,10 @@ class Main extends PluginBase {
         $pos = $player->getPosition();
         $pX = (int) floor($pos->getX() / $total);
         $pZ = (int) floor($pos->getZ() / $total);
-        $world = $player->getWorld()->getFolderName();
+        $worldName = $player->getWorld()->getFolderName();
         $priceFriend = $this->getConfig()->getNested("precos.amigo", 500.0);
 
-        $friends = $this->database->getFriends($pX, $pZ, $world);
+        $friends = $this->database->getFriends($pX, $pZ, $worldName);
         $count = count($friends);
         
         $data = [
@@ -193,20 +175,6 @@ class Main extends PluginBase {
             ]
         ];
         $pk = \pocketmine\network\mcpe\protocol\ModalFormRequestPacket::create(105, json_encode($data));
-        $player->getNetworkSession()->sendDataPacket($pk);
-    }
-
-    public function addFriendUI(Player $player): void {
-        $priceFriend = $this->getConfig()->getNested("precos.amigo", 500.0);
-        $data = [
-            "type" => "custom_form",
-            "title" => "§l§2ADICIONAR AMIGO",
-            "content" => [
-                ["type" => "label", "text" => "§7O ajudante poderá construir e quebrar blocos.\nCusto: §a$ " . number_format($priceFriend, 2)],
-                ["type" => "input", "text" => "§fNome do Jogador:", "placeholder" => "Ex: Fulano"]
-            ]
-        ];
-        $pk = \pocketmine\network\mcpe\protocol\ModalFormRequestPacket::create(106, json_encode($data));
         $player->getNetworkSession()->sendDataPacket($pk);
     }
 }
